@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/db"
+	"github.com/TechBowl-japan/go-stations/handler"
 )
+
 
 func main() {
 	err := realMain()
@@ -51,6 +53,12 @@ func realMain() error {
 	mux := http.NewServeMux()
 
 	// TODO: ここから実装を行う
+
+	// * /healthz エンドポイントを作成する
+	mux.HandleFunc("/healthz",handler.NewHealthzHandler().ServeHTTP)
+	
+
+	// * HTTPSサーバーを立ち上げる
 	http.ListenAndServe(port,mux)
 
 	return nil
