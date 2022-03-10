@@ -8,8 +8,8 @@ import (
 
 	"github.com/TechBowl-japan/go-stations/db"
 	"github.com/TechBowl-japan/go-stations/handler"
+	"github.com/TechBowl-japan/go-stations/service"
 )
-
 
 func main() {
 	err := realMain()
@@ -54,12 +54,14 @@ func realMain() error {
 
 	// TODO: ここから実装を行う
 
+	svc := service.NewTODOService(todoDB)
+	// * /todos エンドポイントを作成する
+	mux.HandleFunc("/todos", handler.NewTODOHandler(svc).ServeHTTP)
 	// * /healthz エンドポイントを作成する
-	mux.HandleFunc("/healthz",handler.NewHealthzHandler().ServeHTTP)
-	
+	mux.HandleFunc("/healthz", handler.NewHealthzHandler().ServeHTTP)
 
 	// * HTTPSサーバーを立ち上げる
-	http.ListenAndServe(port,mux)
+	http.ListenAndServe(port, mux)
 
 	return nil
 }
