@@ -53,7 +53,6 @@ func realMain() error {
 	mux := http.NewServeMux()
 
 	// TODO: ここから実装を行う
-
 	svc := service.NewTODOService(todoDB)
 	// * /todos エンドポイントを作成する
 	mux.HandleFunc("/todos", handler.NewTODOHandler(svc).ServeHTTP)

@@ -31,7 +31,10 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// * request body を decode する
 	var requestBody model.CreateTODORequest
-	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		log.Println(err)
+		return
+	}
 	// * subject が 空文字の場合は 早期return
 	if requestBody.Subject == "" {
 		w.Header().Set("Content-Type", "application/json")
@@ -41,17 +44,15 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// * DB に TODO を保存
 	response, err := h.Create(r.Context(), &requestBody)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	// * HTTP Responseを返す
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
-
-	// ! err がある場合はログに出す
-	if err != nil {
-		log.Println(err)
-		return
-	}
 }
 
 // Create handles the endpoint that creates the TODO.
