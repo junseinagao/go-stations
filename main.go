@@ -8,6 +8,7 @@ import (
 
 	"github.com/TechBowl-japan/go-stations/db"
 	"github.com/TechBowl-japan/go-stations/handler"
+	"github.com/TechBowl-japan/go-stations/handler/router"
 	"github.com/TechBowl-japan/go-stations/service"
 )
 
@@ -50,7 +51,7 @@ func realMain() error {
 	defer todoDB.Close()
 
 	// set http handlers
-	mux := http.NewServeMux()
+	mux := router.NewRouter(todoDB)
 
 	// TODO: ここから実装を行う
 	svc := service.NewTODOService(todoDB)

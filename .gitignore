@@ -19,3 +19,4 @@ node_modules
 .DS_Store
 
 go-stations
+.techtrain/config.toml
