@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/mattn/go-sqlite3"
@@ -27,17 +28,17 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 		confirm = `SELECT subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
 	var todo model.TODO
-	if (subject == "") {
-		return &todo,sqlite3.ErrConstraint
+	if subject == "" {
+		return &todo, sqlite3.ErrConstraint
 	}
-	
-	stmt, err := s.db.PrepareContext(ctx,insert)
-	result,err := stmt.ExecContext(ctx,subject,description)
-		todo.ID,err  = result.LastInsertId()
-		row :=  s.db.QueryRowContext(ctx,confirm,todo.ID)
-		err = row.Scan(&todo.Subject,&todo.Description,&todo.CreatedAt,&todo.UpdatedAt)
-		
-	return &todo,err
+
+	stmt, err := s.db.PrepareContext(ctx, insert)
+	result, err := stmt.ExecContext(ctx, subject, description)
+	todo.ID, err = result.LastInsertId()
+	row := s.db.QueryRowContext(ctx, confirm, todo.ID)
+	err = row.Scan(&todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
+
+	return &todo, err
 }
 
 // ReadTODO reads TODOs on DB.
@@ -57,7 +58,35 @@ func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, descrip
 		confirm = `SELECT subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
 
-	return nil, nil
+	var todo model.TODO
+	todo.ID = id
+
+	if subject == "" {
+		return &todo, sqlite3.ErrConstraint
+	}
+	stmt, err := s.db.PrepareContext(ctx, update)
+	if err != nil {
+		return &todo, err
+	}
+	result, err := stmt.ExecContext(ctx, subject, description, id)
+	if err != nil {
+		return &todo, err
+	}
+	rowId, err := result.RowsAffected()
+	if rowId == 0 {
+		return &todo, &model.ErrNotFound{
+			When: time.Now(),
+			What: "Updated row not found",
+		}
+	}
+	if err != nil {
+		return &todo, err
+	}
+
+	row := s.db.QueryRowContext(ctx, confirm, id)
+	err = row.Scan(&todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
+
+	return &todo, err
 }
 
 // DeleteTODO deletes TODOs on DB by ids.
