@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -111,7 +112,30 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 		return
-
+	case http.MethodDelete:
+		// * request body を decode する
+		var requestBody model.DeleteTODORequest
+		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			log.Println(err)
+			return
+		}
+		if len(requestBody.IDs) == 0 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		// * DB の TODO を削除
+		response, err := h.Delete(r.Context(), &requestBody)
+		var errNotFound *model.ErrNotFound
+		if errors.As(err, &errNotFound) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
 	default:
 		return
 	}
@@ -150,6 +174,6 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 
 // Delete handles the endpoint that deletes the TODOs.
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
-	_ = h.svc.DeleteTODO(ctx, nil)
-	return &model.DeleteTODOResponse{}, nil
+	err := h.svc.DeleteTODO(ctx, req.IDs)
+	return &model.DeleteTODOResponse{}, err
 }
