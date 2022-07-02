@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/db"
-	"github.com/TechBowl-japan/go-stations/handler"
 	"github.com/TechBowl-japan/go-stations/handler/router"
-	"github.com/TechBowl-japan/go-stations/service"
 )
 
 func main() {
@@ -54,11 +52,6 @@ func realMain() error {
 	mux := router.NewRouter(todoDB)
 
 	// TODO: ここから実装を行う
-	svc := service.NewTODOService(todoDB)
-	// * /todos エンドポイントを作成する
-	mux.HandleFunc("/todos", handler.NewTODOHandler(svc).ServeHTTP)
-	// * /healthz エンドポイントを作成する
-	mux.HandleFunc("/healthz", handler.NewHealthzHandler().ServeHTTP)
 
 	// * HTTPSサーバーを立ち上げる
 	http.ListenAndServe(port, mux)
